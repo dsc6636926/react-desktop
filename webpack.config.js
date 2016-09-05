@@ -1,9 +1,5 @@
 var webpack = require('webpack');
 var path = require('path');
-var commonsChunkPlugin = new webpack.optimize.CommonsChunkPlugin({
-    name: "common",
-    filename: 'common.js'
-});
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 var copyWebpackPlugin = new CopyWebpackPlugin([{
     from: path.join(__dirname, 'src', 'vendor'),
@@ -14,7 +10,6 @@ var copyWebpackPlugin = new CopyWebpackPlugin([{
 }]);
 module.exports = {
     plugins: [
-        commonsChunkPlugin,
         copyWebpackPlugin,
     ],
     entry: {

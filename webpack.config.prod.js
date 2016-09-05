@@ -20,7 +20,7 @@ var copyWebpackPlugin = new CopyWebpackPlugin([{
 }]);
 var ImageminPlugin = require('imagemin-webpack-plugin').default;
 var imageminPlugin = new ImageminPlugin({
-    disable: true,
+    disable: false,
     optipng: {
         optimizationLevel: 4
     },
@@ -28,7 +28,7 @@ var imageminPlugin = new ImageminPlugin({
         optimizationLevel: 1
     },
     jpegtran: {
-        progressive: false
+        progressive: true
     },
     svgo: {},
     pngquant: null,
