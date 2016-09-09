@@ -253,7 +253,8 @@ export class Desktop extends React.Component<{
                 {
                     left: index * 129 + (self.props.showStartmenu ? 32 : 0),
                     paddingLeft: 5,
-                    background: icon.index == self.state.currentIndex ? 'linear-gradient( #4169E1, rgba(0, 0, 0, 1), #4169E1)' : ''
+                    background: icon.index == self.state.currentIndex ? 
+                        'linear-gradient( #4169E1, rgba(0, 0, 0, 1), #4169E1)' : ''
                 }
             } onClick={e => {
                 self.handleSelected.bind(self)(icon);
