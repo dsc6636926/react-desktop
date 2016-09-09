@@ -18,7 +18,7 @@ class App extends React.Component<{ widgets: desktop.AppIcon[] },
         config.config.alert = (msg, className, timeout) => {
             let pair = {
                 msg: msg,
-                className: className || "alert alert-success alert-dismissible fade in"
+                className: className || "alert-success"
             };
             self.state.alerts.push(pair);
             self.setState({ alerts: self.state.alerts });
@@ -29,7 +29,7 @@ class App extends React.Component<{ widgets: desktop.AppIcon[] },
                 clearTimeout(index);
             }, timeout || config.config.defaultAlertTimeout);
         };
-        config.config.error = (msg, timeout) => config.config.alert(msg, "alert alert-danger alert-dismissible fade in", timeout || config.config.defaultErrorTimeout);
+        config.config.error = (msg, timeout) => config.config.alert(msg, "alert-danger", timeout || config.config.defaultErrorTimeout);
     }
     render() {
         let self = this;
@@ -46,7 +46,7 @@ class App extends React.Component<{ widgets: desktop.AppIcon[] },
                     width: 300,
                     height: 53,
                     zIndex: 9999999
-                }} className={alert.className} role="alert">
+                }} className={"alert alert-dismissible fade in " + alert.className} role="alert">
                     <button type="button" className="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>
                     <strong>{alert.msg}</strong>
                 </div>) : null
