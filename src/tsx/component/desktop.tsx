@@ -116,7 +116,7 @@ export class Desktop extends React.Component<{
                     if (self.state.openedIcons.length > 1) {
                         if (!self.state.showAppSwitcher) {
                             self.lastSwitchedTime = new Date();
-                            self.setState({ showAppSwitcher: true });
+                            self.setState({ showAppSwitcher: true, showStartmenu: false });
                         }
                         self.appSwitchStarted = true;
                     }
@@ -124,6 +124,13 @@ export class Desktop extends React.Component<{
                     self.handleClose(self.state.currentIndex);
                     e.stopPropagation();
                     e.preventDefault();
+                } else if (e.keyCode == 83) {
+                    if (self.appSwitchStarted) {
+                        self.closeAppSwitcher();
+                    }
+                    if (!self.state.showStartmenu) {
+                        self.setState({ showStartmenu: true });
+                    }
                 }
                 e.stopPropagation();
                 e.preventDefault();
@@ -134,16 +141,17 @@ export class Desktop extends React.Component<{
                 if (e.keyCode == 76) {
                     let diff = new Date().getTime() - self.lastSwitchedTime.getTime();
                     if (diff < 1500) self.switchApp();
-                    else {
-                        self.setState({ showAppSwitcher: false });
-                        self.appSwitchStarted = false;
-                    }
+                    else self.closeAppSwitcher();
                 } else {
-                    self.setState({ showAppSwitcher: false });
-                    self.appSwitchStarted = false;
+                    self.closeAppSwitcher();
                 }
             }
         };
+    }
+    private closeAppSwitcher() {
+        let self = this;
+        self.setState({ showAppSwitcher: false });
+        self.appSwitchStarted = false;
     }
     private switchApp() {
         let self = this;
@@ -169,13 +177,13 @@ export class Desktop extends React.Component<{
         let now = new Date();
         let diff = new Date().getTime() - self.lastOpenWindowTime.getTime();
         if (diff < 500) {
-            config.config.error("请求打开窗体频率太快,请稍候再试");
+            config.config.alert("请求打开窗体频率太快,请稍候再试");
             return null;
         }
         self.lastOpenWindowTime = now;
         let array = self.state.openedIcons;
         let len = self.state.openedIcons.length;
-        if (len + 1 > 10) {
+        if (len + 1 > 12) {
             config.config.error("打开的窗体太多,请关掉一部分");
         } else {
             let windowCount = 5;
