@@ -8,23 +8,28 @@ import * as github from "./widgets/github.tsx";
 
 class App extends React.Component<{ widgets: desktop.AppIcon[] },
     {
-        errors?: string[],
+        alerts?: { msg: string, className: string }[],
         renderCount?: number
     }> {
     constructor() {
         super();
         let self = this;
-        self.state = { errors: [], renderCount: 0 };
-        config.config.error = (msg) => {
-            self.state.errors.push(msg);
-            self.setState({ errors: self.state.errors });
-            var index = setTimeout(function () {
-                let tmp = self.state.errors;
-                let n = tmp.indexOf(msg);
-                self.setState({ errors: tmp.slice(0, n).concat(tmp.slice(n + 1, tmp.length)) });
+        self.state = { alerts: [], renderCount: 0 };
+        config.config.alert = (msg, className, timeout) => {
+            let pair = {
+                msg: msg,
+                className: className || "alert alert-success alert-dismissible fade in"
+            };
+            self.state.alerts.push(pair);
+            self.setState({ alerts: self.state.alerts });
+            var index = setTimeout(() => {
+                let tmp = self.state.alerts;
+                let n = tmp.indexOf(pair);
+                self.setState({ alerts: tmp.slice(0, n).concat(tmp.slice(n + 1, tmp.length)) });
                 clearTimeout(index);
-            }, 1500);
+            }, timeout || config.config.defaultAlertTimeout);
         };
+        config.config.error = (msg, timeout) => config.config.alert(msg, "alert alert-danger alert-dismissible fade in", timeout || config.config.defaultErrorTimeout);
     }
     render() {
         let self = this;
@@ -34,16 +39,16 @@ class App extends React.Component<{ widgets: desktop.AppIcon[] },
         }}>
             <desktop.Desktop  appIcons={self.props.widgets} showStartmenu={true}/>
             {
-                self.state.errors ? self.state.errors.map((error, index) => <div key={index} style={{
+                self.state.alerts ? self.state.alerts.map((alert, index) => <div key={index} style={{
                     position: 'fixed',
                     top: 55 * index + 20,
                     right: 20,
                     width: 300,
                     height: 53,
                     zIndex: 9999999
-                }} className="alert alert-danger alert-dismissible fade in" role="alert">
+                }} className={alert.className} role="alert">
                     <button type="button" className="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>
-                    <strong>{error}</strong>
+                    <strong>{alert.msg}</strong>
                 </div>) : null
             }
         </div>;
@@ -65,7 +70,7 @@ class App extends React.Component<{ widgets: desktop.AppIcon[] },
                 text: "Google",
                 icon: require("../imgs/google.png"),
                 url: "https://www.google.com"
-            }, 
+            },
             {
                 text: "Jolie",
                 icon: require("../imgs/tomb raider.png"),

@@ -83,7 +83,7 @@ export class Widget extends React.Component<{
     }
     componentDidMount() {
         let self = this;
-        let layer = ReactDOM.findDOMNode(self.refs.layer);
+        let layer = ReactDOM.findDOMNode(self.refs.layer); 
         let maxX = document.body.clientWidth - layer.clientWidth;
         let maxY = document.body.clientHeight - layer.clientHeight;
         if (self.state.left < 0) self.state.left = 0;
@@ -118,7 +118,8 @@ export class Widget extends React.Component<{
                 left: self.state.left,
                 top: self.state.top
             }}>
-                <div className="widget-title widget-move" onMouseDown={e => self.handldeMouseDown.bind(self)(e) }>
+                <div className={"widget-title " + (self.props.url || self.props.maximum ? "" : "widget-move") }
+                    onMouseDown={e => self.handldeMouseDown.bind(self)(e) }>
                     <img src={self.props.icon || require("../../imgs/default-app-icon.png") } alt={self.props.title}   />
                     <span>{self.props.title}</span>
                 </div>

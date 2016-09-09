@@ -27,50 +27,68 @@ export class Desktop extends React.Component<{
     appIcons: AppIcon[],
     showStartmenu?: boolean
 }, {
-        renderCount?: number,
         openedIcons?: InnerAppIcon[],
         currentIndex?: number,
-        showStartmenu?: boolean
+        showStartmenu?: boolean,
+        showAppSwitcher?: boolean,
+        appSwitcherSelectedAppIndex?: number
     }> {
     private hiddenStartmenuing: boolean
     constructor() {
         super();
         let self = this;
-        self.state = { renderCount: 0, openedIcons: [], currentIndex: 0 };
+        self.state = {
+            openedIcons: [],
+            currentIndex: 0,
+            showStartmenu: false,
+            showAppSwitcher: false,
+            appSwitcherSelectedAppIndex: 0
+        };
+        self.config();
+        self.removeMenuAndHandleResize();
+        self.registerHotkey();
+    }
+    private itemWidth = 88
+    private itemHeight = 96
+    private objectIndexCount = 0
+    private appSwitchStarted = false
+    private lastOpenWindowTime: Date = new Date(1997, 7)
+    private lastSwitchedTime: Date = new Date(1997, 7)
+    private config() {
+        let self = this;
+        let func = (icon: AppIcon): { close: () => void } => {
+            let app = self.handleClick(icon);
+            return { close: () => app && self.handleClose(app.index) };
+        };
+        config.config.openUrl = (url, title, icon) => func({
+            text: title,
+            icon: icon || browserIcon,
+            title: title,
+            url: url
+        });
+        config.config.openContent = (content, title, icon) => func({
+            text: title,
+            icon: icon || defaultIconSrc,
+            title: title,
+            content: content
+        });
+        config.config.openImage = (src, title) => func({
+            text: title || '图片查看',
+            icon: imageViewIcon,
+            title: title || '图片查看',
+            covered: true,
+            top: (document.body.clientHeight - 700) / 2,
+            zIndex: 103,
+            content: <img src={src} alt={title || '图片查看'} style={{
+                maxHeight: 700
+            }} />
+        });
+    }
+    private removeMenuAndHandleResize() {
+        let self = this;
         window.onresize = () => {
             self.setState({
-                renderCount:
-                self.state.renderCount + 1,
                 showStartmenu: false
-            });
-        };
-        config.config.openUrl = (url, title, icon) => {
-            self.handleClick({
-                text: title,
-                icon: icon || browserIcon,
-                title: title,
-                url: url
-            });
-        };
-        config.config.openContent = (content, title, icon) => {
-            self.handleClick({
-                text: title,
-                icon: icon || defaultIconSrc,
-                title: title,
-                content: content
-            });
-        };
-        config.config.openImage = (src, title) => {
-            self.handleClick({
-                text: title || '图片查看',
-                icon: imageViewIcon,
-                title: title || '图片查看',
-                covered: true,
-                top: (document.body.clientHeight - 700) / 2,
-                zIndex: 1000000,
-                content: <img src={src} alt={title || '图片查看'} style={{
-                    maxHeight: 700
-                }} />
             });
         };
         document.oncontextmenu = () => {
@@ -90,17 +108,69 @@ export class Desktop extends React.Component<{
             }
         };
     }
-    private itemWidth = 88
-    private itemHeight = 96
-    private objectIndexCount = 0
-    private lastOpenWindowTime: Date = new Date(1997, 7)
-    private handleClick(item: AppIcon) {
+    private registerHotkey() {
+        let self = this;
+        document.onkeydown = (e: KeyboardEvent) => {
+            if (e && e.altKey) {
+                if (e.keyCode == 76) {//alt+l
+                    if (self.state.openedIcons.length > 1) {
+                        if (!self.state.showAppSwitcher) {
+                            self.lastSwitchedTime = new Date();
+                            self.setState({ showAppSwitcher: true });
+                        }
+                        self.appSwitchStarted = true;
+                    }
+                } else if (e.keyCode == 67) {//alt+c ==>close currentIndex
+                    self.handleClose(self.state.currentIndex);
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        };
+        document.onkeyup = (e) => {
+            if (self.appSwitchStarted) {
+                if (e.keyCode == 76) {
+                    let diff = new Date().getTime() - self.lastSwitchedTime.getTime();
+                    if (diff < 1500) self.switchApp();
+                    else {
+                        self.setState({ showAppSwitcher: false });
+                        self.appSwitchStarted = false;
+                    }
+                } else {
+                    self.setState({ showAppSwitcher: false });
+                    self.appSwitchStarted = false;
+                }
+            }
+        };
+    }
+    private switchApp() {
+        let self = this;
+        self.lastSwitchedTime = new Date();
+        let array = self.state.openedIcons;
+        let tmpIndex = -1;
+        let length = array.length;
+        for (let index = 0; index < length; index++) {
+            let element = array[index];
+            if (element.index == self.state.appSwitcherSelectedAppIndex) {
+                tmpIndex = index;
+            }
+        }
+        if (tmpIndex == -1 || tmpIndex == length - 1) tmpIndex = 0;
+        else tmpIndex += 1;
+        self.setState({
+            appSwitcherSelectedAppIndex: self.state.openedIcons[tmpIndex].index,
+            currentIndex: self.state.openedIcons[tmpIndex].index
+        });
+    }
+    private handleClick(item: AppIcon): InnerAppIcon {
         let self = this;
         let now = new Date();
-        let diff = now.getTime() - self.lastOpenWindowTime.getTime();
+        let diff = new Date().getTime() - self.lastOpenWindowTime.getTime();
         if (diff < 500) {
             config.config.error("请求打开窗体频率太快,请稍候再试");
-            return;
+            return null;
         }
         self.lastOpenWindowTime = now;
         let array = self.state.openedIcons;
@@ -110,7 +180,7 @@ export class Desktop extends React.Component<{
         } else {
             let windowCount = 5;
             let gap = 80;
-            array.push({
+            let ap = {
                 text: item.text,
                 icon: item.icon,
                 content: item.content,
@@ -122,35 +192,38 @@ export class Desktop extends React.Component<{
                 left: ((len / windowCount) + len % windowCount) * gap + gap,
                 top: item.top == undefined ? (len % windowCount) * gap + gap : item.top,
                 index: ++self.objectIndexCount
-            });
+            };
+            array.push(ap);
             self.setState({
-                renderCount: self.state.renderCount + 1,
                 openedIcons: array,
-                currentIndex: self.objectIndexCount
+                currentIndex: self.objectIndexCount,
+                appSwitcherSelectedAppIndex: self.objectIndexCount
             });
+            return ap;
         }
+        return null;
     }
     private handleSelected(icon: InnerAppIcon) {
         let self = this;
         self.setState({
-            renderCount: self.state.renderCount + 1,
             currentIndex: icon.index
         });
     }
-    private handleClose(icon: InnerAppIcon, index: number, widget: widget.Widget) {
+    private handleClose(appIndex: number) {
         let self = this;
         let array = self.state.openedIcons;
         let target: InnerAppIcon[] = [];
-        for (var index = 0; index < array.length; index++) {
-            var element = array[index];
-            if (element.index == icon.index) continue;
+        for (let index = 0; index < array.length; index++) {
+            let element = array[index];
+            if (element.index == appIndex) continue;
             target.push(element);
         }
-        let count = target.length;
+        let length = target.length;
+        let index = length > 0 ? target[length - 1].index : 0
         self.setState({
-            renderCount: self.state.renderCount + 1,
             openedIcons: target,
-            currentIndex: count > 1 ? target[count - 1].index : 0
+            appSwitcherSelectedAppIndex: index,
+            currentIndex: index
         });
     }
     render() {
@@ -167,7 +240,7 @@ export class Desktop extends React.Component<{
                 zIndex={icon.zIndex ? icon.zIndex : (icon.index == self.state.currentIndex ? 101 : 100) }
                 show={self.state.showStartmenu ? undefined : (self.hiddenStartmenuing ? undefined : (icon.index == self.state.currentIndex ? true : undefined)) }
                 onSelected={w => self.handleSelected.bind(self)(icon, icon.index) }  key={icon.index} url={icon.url}
-                maximum={icon.maximum } covered={icon.covered} onClosd={w => self.handleClose.bind(self)(icon, icon.index, w) }/>)
+                maximum={icon.maximum } covered={icon.covered} onClosd={w => self.handleClose.bind(self)(icon.index) }/>)
             tasks = rights.map((icon, index) => <div className="taskbar-item" key={icon.index}  style={
                 {
                     left: index * 129 + (self.props.showStartmenu ? 32 : 0),
@@ -222,6 +295,34 @@ export class Desktop extends React.Component<{
                 }
                 {tasks}
             </div>
+            {
+                self.state.showAppSwitcher ? <div className="appSwitcher-cover" onClick={e => {
+                    self.setState({
+                        showAppSwitcher: false
+                    });
+                    e.stopPropagation();
+                    e.preventDefault();
+                } }>
+                    <div className="appSwitcher-container">
+                        <div className="appSwitcher" style={
+                            {
+                                width: self.state.openedIcons.length * (48 + 5) + 10,
+                                left: (document.body.clientWidth - self.state.openedIcons.length * (48 + 5)) / 2
+                            }
+                        }>
+                            {
+                                self.state.openedIcons.map((icon, index) => <div key={index}
+                                    className="appSwitcher-item" style={{
+                                        left: index * 53,
+                                        border: self.state.appSwitcherSelectedAppIndex == icon.index ? "2px solid black" : ""
+                                    }}>
+                                    <img src={icon.icon || defaultIconSrc}/>
+                                </div>)
+                            }
+                        </div>
+                    </div>
+                </div> : null
+            }
             {
                 self.state.showStartmenu ? <div className="startmenu-cover" onClick={e => {
                     self.hiddenStartmenuing = true;

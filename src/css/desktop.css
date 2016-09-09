@@ -7,7 +7,7 @@
 
 .taskbar {
     height: 32px;
-    width: calc(100% - 32x);
+    width: calc(100% - 32px);
     margin-left: 32px;
     background: linear-gradient( #eaeaea, rgba(0, 0, 0, 0.1), #eaeaea);
 }
@@ -38,7 +38,7 @@
     left: 0;
     top: 0;
     opacity: 0.8;
-    z-index: 10000;
+    z-index: 5000;
     filter: alpha(opacity=80);
     position: fixed;
 }
@@ -170,4 +170,47 @@
     z-index: 1;
     background: rgba(0, 0, 0, 0.3);
     cursor: pointer;
+}
+
+.appSwitcher-cover {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    left: 0;
+    top: 0;
+    opacity: 0.8;
+    z-index: 5000;
+    filter: alpha(opacity=80);
+    position: fixed;
+}
+
+.appSwitcher-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.appSwitcher {
+    background: linear-gradient( #eee, rgba(128, 128, 128, 0.8), #eee);
+    height: 62px;
+    top: calc(50% - 31px);
+    border-radius: 5px;
+    position: absolute;
+}
+
+.appSwitcher-item {
+    width: 52px;
+    height: 52px;
+    margin-top: 5px;
+    margin-left: 5px;
+    position: absolute;
+    border-radius: 5px;
+}
+
+.appSwitcher img {
+    border-radius: 3px;
+    display: block;
+    margin: 0 auto;
+    width: 48px;
+    height: 48px;
 }
