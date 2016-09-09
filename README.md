@@ -25,7 +25,7 @@ $ npm run dev
 ## Hotkey
 ```bash
 alt+c #close current widget
-alt+l #open widget-switcher,app-switcher will list all opened widget
+alt+l #open widget-switcher,widget-switcher will list all opened widget
 alt+s #open startmenu
 ```
 **Enjoy!**
